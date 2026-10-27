@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AudioMetrics | Clinical Pure-Tone Audiometry System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Vector Icons (React.js Modern Icons) -->
+  <script src="lucide.min.js"></script>
+  <!-- Client-side PDF Generation Engine (Offline & Android WebView Ready) -->
+  <script src="jspdf.umd.min.js"></script>
+  <script src="html2canvas.min.js"></script>
+  <!-- Supabase Cloud SDK & Configuration -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+</head>
+<body>
+  <!-- Global App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="activity" class="brand-lucide-icon"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">AudioMetrics</span>
+          <span class="brand-subtitle">Clinical Diagnostic Audiometry System</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Multilingual Language Selector -->
+        <div class="lang-selector-wrapper">
+          <span class="lang-icon"><i data-lucide="globe"></i></span>
+          <select id="app-language-select" class="lang-select-dropdown" aria-label="Select Application Language">
+            <option value="en" selected>🇬🇧 English</option>
+            <optgroup label="🇮🇳 Indian Languages (भारतीय भाषाएं)">
+              <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+              <option value="ta">🇮🇳 தமிழ் (Tamil)</option>
+              <option value="te">🇮🇳 తెలుగు (Telugu)</option>
+              <option value="kn">🇮🇳 ಕನ್ನಡ (Kannada)</option>
+              <option value="ml">🇮🇳 മലയാളം (Malayalam)</option>
+              <option value="bn">🇮🇳 বাংলা (Bengali)</option>
+              <option value="mr">🇮🇳 मराठी (Marathi)</option>
+              <option value="gu">🇮🇳 ગુજરાતી (Gujarati)</option>
+              <option value="pa">🇮🇳 ਪੰਜਾਬੀ (Punjabi)</option>
+              <option value="or">🇮🇳 ଓଡ଼ିଆ (Odia)</option>
+              <option value="as">🇮🇳 অসমীয়া (Assamese)</option>
+              <option value="ur">🇮🇳 اردو (Urdu)</option>
+              <option value="sa">🇮🇳 संस्कृतम् (Sanskrit)</option>
+              <option value="ne">🇮🇳 नेपाली (Nepali)</option>
+              <option value="mr_kok">🇮🇳 कोंकणी / ಕೊಂಕಣಿ (Konkani)</option>
+              <option value="sd">🇮🇳 सिंधी / سنڌي (Sindhi)</option>
+              <option value="doi">🇮🇳 डोगरी (Dogri)</option>
+              <option value="mni">🇮🇳 ꯃꯩꯇꯩꯂꯣᓐ (Manipuri)</option>
+              <option value="brx">🇮🇳 बर' (Bodo)</option>
+              <option value="ks">🇮🇳 कॉशुर / كأشُر (Kashmiri)</option>
+              <option value="mai">🇮🇳 मैथिली (Maithili)</option>
+              <option value="sat">🇮🇳 ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+            </optgroup>
+            <optgroup label="🌐 Global Languages">
+              <option value="es">🇪🇸 Español</option>
+              <option value="fr">🇫🇷 Français</option>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="zh">🇨🇳 中文</option>
+              <option value="ja">🇯🇵 日本語</option>
+            </optgroup>
+          </select>
+        </div>
+
+
+
+        <!-- Hearing Reference Table Button -->
+        <button id="btn-open-reference-modal" class="reference-header-btn" title="View Age vs Hearing Capacity Reference Data">
+          <i data-lucide="bar-chart-2"></i> <span data-i18n="nav_reference">Hearing Limits & Scale</span>
+        </button>
+
+        <!-- Supabase Cloud Sync Status Button -->
+        <button id="btn-cloud-config" class="cloud-config-btn" aria-label="Supabase Cloud Settings" title="Supabase Cloud Settings">
+          <span class="cloud-icon" id="cloud-status-icon"><i data-lucide="cloud"></i></span>
+          <span id="cloud-status-text" data-i18n="nav_cloud">Cloud Sync</span>
+        </button>
+
+        <!-- Theme Toggle (Dark / Light Mode) -->
+        <button id="btn-theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark / Light Mode" title="Toggle theme">
+          <span class="theme-icon-sun"><i data-lucide="sun"></i></span>
+          <span class="theme-icon-moon"><i data-lucide="moon"></i></span>
+        </button>
+
+        <!-- User / Patient Status Pill (Visible When Logged In) -->
+        <div class="header-right" id="header-user-status" style="display: none;">
+          <div class="patient-pill">
+            <span class="patient-icon"><i data-lucide="user"></i></span>
+            <span id="patient-display-name">Patient</span>
+            <span class="patient-age-badge" id="patient-display-age">-- yrs</span>
+          </div>
+          <button id="btn-logout" class="btn-secondary btn-sm" title="Log out">
+            <i data-lucide="log-out"></i>
+            <span data-i18n="nav_logout">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="app-main">
+
+    <!-- ============================================== -->
+    <!-- SCREEN 1: MODERN SPLIT-SCREEN AUTH PORTAL      -->
+    <!-- ============================================== -->
+    <section id="auth-section" class="auth-section">
+      <div class="auth-split-wrapper">
+        
+        <!-- Left Side: Clinic Hero Visual & Features -->
+        <div class="auth-hero-panel">
+          <div class="hero-badge">
+            <span class="badge-dot"></span> Clinical Audiology Suite
+          </div>
+          <h2 class="hero-title">Precision Pure-Tone Hearing Diagnostics</h2>
+          <p class="hero-description">
+            Standardized pure-tone audiometry screening following ANSI S3.21 and ISO 8253-1 guidelines with real-time calibrated sine wave synthesis.
+          </p>
+
+          <div class="hero-features">
+            <div class="feature-item">
+              <div class="feature-icon"><i data-lucide="headphones"></i></div>
+              <div>
+                <strong>Calibrated Pure-Tone Audio</strong>
+                <span>Frequencies from 250 Hz to 8000 Hz with click-free envelopes</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i data-lucide="line-chart"></i></div>
+              <div>
+                <strong>Live Dual-Ear Audiogram</strong>
+                <span>Real-time plotting for Left Ear (✕) and Right Ear (◯)</span>
+              </div>
+            </div>
+            <div class="feature-item">
+              <div class="feature-icon"><i data-lucide="file-text"></i></div>
+              <div>
+                <strong>Automated PTA & PDF Export</strong>
+                <span>Instant diagnostic categorization and printable medical records</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-stat-box">
+            <div class="stat-pill">
+              <span class="stat-num">0.1 dB</span>
+              <span class="stat-lbl">Digital Precision</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-num">7 Octaves</span>
+              <span class="stat-lbl">Standard Frequencies</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-num">WHO</span>
+              <span class="stat-lbl">Classification</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Interactive Login / Sign Up Card -->
+        <div class="auth-card-panel">
+          <div class="auth-card">
+            <!-- Card Header -->
+            <div class="auth-header">
+              <div class="medical-badge">
+                <span class="badge-dot"></span> Patient Portal
+              </div>
+              <h1 id="auth-title">Welcome Back</h1>
+              <p class="auth-description" id="auth-subtitle">Sign in or register your profile to begin calibrated pure-tone screening.</p>
+            </div>
+
+            <!-- Toggle Tabs for Login & Sign Up -->
+            <div class="auth-tabs" role="tablist">
+              <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true" aria-controls="form-login">
+                <i data-lucide="log-in"></i>
+                Login
+              </button>
+              <button class="tab-btn" id="tab-signup" role="tab" aria-selected="false" aria-controls="form-signup">
+                <i data-lucide="user-plus"></i>
+                Sign Up
+              </button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="form-login" class="auth-form" novalidate>
+              <div class="form-group">
+                <label for="login-identifier">Email or Mobile Number</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">
+                    <i data-lucide="mail"></i>
+                  </span>
+                  <input type="text" id="login-identifier" placeholder="e.g., patient@example.com or 9876543210" required autocomplete="username">
+                </div>
+                <span class="field-error" id="error-login-identifier"></span>
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="login-password">Password</label>
+                  <a href="#" id="link-forgot-password" class="forgot-link">Forgot Password?</a>
+                </div>
+                <div class="input-wrapper">
+                  <span class="input-icon">
+                    <i data-lucide="lock"></i>
+                  </span>
+                  <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
+                  <button type="button" class="btn-toggle-pwd" data-target="login-password" aria-label="Toggle password visibility">
+                    <i data-lucide="eye"></i>
+                  </button>
+                </div>
+                <span class="field-error" id="error-login-password"></span>
+              </div>
+
+              <button type="submit" id="btn-login-submit" class="btn-primary btn-block">
+                <span>Login</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+
+              <div class="auth-switch-prompt">
+                Don't have an account? <button type="button" class="btn-link" id="switch-to-signup">Sign up</button>
+              </div>
+            </form>
+
+            <!-- SIGN UP FORM -->
+            <form id="form-signup" class="auth-form" style="display: none;" novalidate>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="signup-first-name">First Name</label>
+                  <input type="text" id="signup-first-name" placeholder="John" required autocomplete="given-name">
+                  <span class="field-error" id="error-signup-first-name"></span>
+                </div>
+                <div class="form-group">
+                  <label for="signup-last-name">Last Name</label>
+                  <input type="text" id="signup-last-name" placeholder="Doe" required autocomplete="family-name">
+                  <span class="field-error" id="error-signup-last-name"></span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="signup-age">Age</label>
+                  <input type="number" id="signup-age" placeholder="e.g., 28" min="1" max="120" required>
+                  <span class="field-error" id="error-signup-age"></span>
+                </div>
+                <div class="form-group flex-2">
+                  <label for="signup-mobile">Mobile Number</label>
+                  <div class="input-wrapper">
+                    <span class="input-icon"><i data-lucide="phone"></i></span>
+                    <input type="tel" id="signup-mobile" placeholder="10-digit mobile" required autocomplete="tel">
+                  </div>
+                  <span class="field-error" id="error-signup-mobile"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="signup-email">Email</label>
+                <div class="input-wrapper">
+                  <span class="input-icon"><i data-lucide="mail"></i></span>
+                  <input type="email" id="signup-email" placeholder="patient@example.com" required autocomplete="email">
+                </div>
+                <span class="field-error" id="error-signup-email"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="signup-password">Password</label>
+                <div class="input-wrapper">
+                  <span class="input-icon"><i data-lucide="lock"></i></span>
+                  <input type="password" id="signup-password" placeholder="At least 6 characters" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-pwd" data-target="signup-password" aria-label="Toggle password visibility">
+                    <i data-lucide="eye"></i>
+                  </button>
+                </div>
+                <span class="field-error" id="error-signup-password"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="signup-confirm-password">Confirm Password</label>
+                <div class="input-wrapper">
+                  <span class="input-icon"><i data-lucide="shield-check"></i></span>
+                  <input type="password" id="signup-confirm-password" placeholder="Re-enter password" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-pwd" data-target="signup-confirm-password" aria-label="Toggle password visibility">
+                    <i data-lucide="eye"></i>
+                  </button>
+                </div>
+                <span class="field-error" id="error-signup-confirm-password"></span>
+              </div>
+
+              <button type="submit" id="btn-signup-submit" class="btn-primary btn-block">
+                <span>Register</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+
+              <div class="auth-switch-prompt">
+                Already have an account? <button type="button" class="btn-link" id="switch-to-login">Login</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forgot Password Modal -->
+      <div id="modal-forgot-password" class="modal-backdrop" style="display: none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i data-lucide="key-round"></i> Reset Password</h3>
+            <button type="button" class="btn-close-modal" id="btn-close-forgot">&times;</button>
+          </div>
+          <p class="modal-desc">Enter your registered email address or mobile number to receive verification instructions.</p>
+          <div class="form-group">
+            <label for="forgot-identifier">Email or Mobile Number</label>
+            <input type="text" id="forgot-identifier" placeholder="e.g., patient@example.com">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="btn-cancel-forgot">Cancel</button>
+            <button type="button" class="btn-primary" id="btn-send-reset">Send Instructions</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Supabase Cloud Connection Modal -->
+      <div id="modal-cloud-config" class="modal-backdrop" style="display: none;">
+        <div class="modal-content" style="max-width: 520px;">
+          <div class="modal-header">
+            <h3><i data-lucide="cloud"></i> Supabase Cloud Database & Storage</h3>
+            <button type="button" class="btn-close-modal" id="btn-close-cloud-modal">&times;</button>
+          </div>
+          <p class="modal-desc">
+            Connect your Supabase project to automatically sync patient profiles, hearing test thresholds, audiogram graph images, and PDF reports to the cloud.
+          </p>
+          <div class="form-group">
+            <label for="input-supabase-url">Supabase Project URL</label>
+            <input type="text" id="input-supabase-url" placeholder="https://your-project.supabase.co">
+            <small style="color: var(--text-light); font-size: 0.8rem;">Found in Supabase Dashboard > Project Settings > API</small>
+          </div>
+          <div class="form-group">
+            <label for="input-supabase-key">Supabase Public Anon Key</label>
+            <input type="password" id="input-supabase-key" placeholder="eyJhbGciOi...">
+            <small style="color: var(--text-light); font-size: 0.8rem;">Public 'anon' key with row-level security</small>
+          </div>
+          <div id="cloud-connection-status-msg" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; margin: 12px 0; font-weight: 500;"></div>
+          <div class="modal-actions" style="margin-top: 1.2rem; display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" class="btn-secondary" id="btn-cancel-cloud-modal">Cancel</button>
+            <button type="button" class="btn-primary" id="btn-save-cloud-config">Save & Connect</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Hearing Capacity & Severity Reference Data Modal -->
+      <div id="modal-hearing-reference" class="modal-backdrop" style="display: none;">
+        <div class="modal-content modal-lg">
+          <div class="modal-header">
+            <div class="modal-title-group">
+              <span class="medical-badge">Reference Norms</span>
+              <h3 data-i18n="ref_title"><i data-lucide="bar-chart-2"></i> Age vs. Hearing Capacity & Severity Scale</h3>
+            </div>
+            <button type="button" class="btn-close-modal" id="btn-close-reference">&times;</button>
+          </div>
+
+          <div class="reference-modal-body">
+            <!-- Table 1: Age vs Max Audible High-Frequency -->
+            <div class="ref-card">
+              <h4><i data-lucide="target"></i> Approximate Max High-Frequency Audibility by Age:</h4>
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>Age Group</th>
+                    <th>Max Frequency (Hz)</th>
+                    <th>Expected kHz Range</th>
+                    <th>Auditory Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>1 – 10 yrs</td><td>18,000 – 20,000 Hz</td><td>20 kHz</td><td>Full acoustic spectrum sensitivity</td></tr>
+                  <tr><td>10 – 20 yrs</td><td>16,000 – 20,000 Hz</td><td>16–20 kHz</td><td>High frequency preserved</td></tr>
+                  <tr><td>20 – 40 yrs</td><td>14,000 – 18,000 Hz</td><td>14–18 kHz</td><td>Normal adult baseline (20 yrs: ~20 kHz)</td></tr>
+                  <tr><td>40 – 60 yrs</td><td>10,000 – 15,000 Hz</td><td>10–15 kHz</td><td>Early presbycusis roll-off (40 yrs: ~15 kHz)</td></tr>
+                  <tr><td>Above 60 yrs</td><td>8,000 – 12,000 Hz</td><td>&lt; 10 kHz</td><td>Presbycusis range (60 yrs: ~10 kHz, 70+ yrs: &lt;10 kHz)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table 2: dB HL Hearing Loss Classification -->
+            <div class="ref-card">
+              <h4><i data-lucide="volume-2"></i> dB HL Hearing Loss Severity Table:</h4>
+              <p class="ref-definition"><em>"dB HL = How loud the sound needs to be for the person to hear it."</em></p>
+              <table class="clinical-table">
+                <thead>
+                  <tr>
+                    <th>dB HL Range</th>
+                    <th>Hearing Classification</th>
+                    <th>Impact on Daily Speech & Sounds</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="row-normal"><td>0 – 20 dB HL</td><td>Normal Hearing</td><td>Can hear soft whispers (&lt;20 dB) effortlessly</td></tr>
+                  <tr class="row-borderline"><td>21 – 25 dB HL</td><td>Borderline Hearing Loss</td><td>Slight difficulty with soft speech in background noise</td></tr>
+                  <tr class="row-mild"><td>26 – 40 dB HL</td><td>Mild Hearing Loss</td><td>Misses soft consonants (f, s, th); quiet rooms needed</td></tr>
+                  <tr class="row-mod"><td>41 – 55 dB HL</td><td>Moderate Hearing Loss</td><td>Understands conversational speech only at close range</td></tr>
+                  <tr class="row-mod-sev"><td>56 – 70 dB HL</td><td>Moderately Severe Loss</td><td>Requires loud speech; struggles in group conversations</td></tr>
+                  <tr class="row-sev"><td>71 – 90 dB HL</td><td>Severe Hearing Loss</td><td>Shouted speech or amplified hearing devices required</td></tr>
+                  <tr class="row-prof"><td>90+ dB HL</td><td>Profound Hearing Loss</td><td>Only perceives very loud vibrations / environmental signals</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table 3: Sound Frequency Spectrum Categories -->
+            <div class="ref-card">
+              <h4><i data-lucide="music"></i> Sound Frequency Spectrum Categories:</h4>
+              <div class="freq-category-pills">
+                <div class="cat-pill low"><strong>125 Hz:</strong> Low Pitch Sound (Bass, Drums)</div>
+                <div class="cat-pill mid"><strong>250 – 800 Hz:</strong> Mid Pitch Sound (Human Voice Vowels)</div>
+                <div class="cat-pill high"><strong>1,000 – 8,000 Hz:</strong> High Pitch Sound (Consonants, Birds, Whistle)</div>
+                <div class="cat-pill vhigh"><strong>10,000 – 20,000 Hz:</strong> Very High Pitch Sound (Ultrasonic / Mosquito Tones)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-primary" id="btn-ack-reference">Close Reference</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- SCREEN 2: CLINICAL AUDIOMETRY HEARING TEST     -->
+    <!-- ============================================== -->
+    <section id="test-section" class="test-section" style="display: none;">
+
+      <!-- Guided Step Navigation Bar ("Hearing Made Easier to Understand - Next Steps") -->
+      <div class="guided-stepper-container" id="test-stepper">
+        <div class="stepper-header">
+          <span class="stepper-title" data-i18n="stepper_title"><i data-lucide="compass"></i> Guided Test Flow & Progress</span>
+          <span class="stepper-subtext" id="stepper-current-instruction" data-i18n="step1_desc">Step 1: Verify Patient Profile & Expected High-Frequency Capacity</span>
+        </div>
+        <div class="stepper-bar">
+          <div class="step-item active" data-step="1" id="step-nav-1">
+            <span class="step-circle">1</span>
+            <div class="step-labels">
+              <span class="step-name" data-i18n="step1_name">Profile & Age</span>
+              <span class="step-status" id="step-status-1">Active</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-item" data-step="2" id="step-nav-2">
+            <span class="step-circle">2</span>
+            <div class="step-labels">
+              <span class="step-name" data-i18n="step2_name">Earphones & ANC</span>
+              <span class="step-status" id="step-status-2">Pending</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-item" data-step="3" id="step-nav-3">
+            <span class="step-circle">3</span>
+            <div class="step-labels">
+              <span class="step-name" data-i18n="step3_name">Frequency Scan</span>
+              <span class="step-status" id="step-status-3">Pending</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-item" data-step="4" id="step-nav-4">
+            <span class="step-circle">4</span>
+            <div class="step-labels">
+              <span class="step-name" data-i18n="step4_name">Audiogram Graph</span>
+              <span class="step-status" id="step-status-4">Pending</span>
+            </div>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-item" data-step="5" id="step-nav-5">
+            <span class="step-circle">5</span>
+            <div class="step-labels">
+              <span class="step-name" data-i18n="step5_name">Report & Next Steps</span>
+              <span class="step-status" id="step-status-5">Pending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clinical Session Banner with Ear Selector & Mode Indicator -->
+      <div class="session-banner">
+        <div class="session-left">
+          <div class="session-indicator">
+            <span class="pulse-beacon"></span>
+            <strong>Active Audiometry Session</strong>
+          </div>
+          <div class="session-meta">
+            <span id="banner-patient-info">Patient: John Doe (28 yrs)</span>
+            <span class="separator">•</span>
+            <span id="banner-test-date">Date: --</span>
+          </div>
+        </div>
+
+        <div class="session-center">
+          <!-- Dual Ear Selector Toggle (Left Ear ✕ & Right Ear ◯) -->
+          <div class="ear-selector-group">
+            <span class="ear-select-label">Active Ear:</span>
+            <button type="button" class="ear-toggle-btn active blue" id="btn-ear-left" data-ear="left">
+              <span class="ear-symbol">✕</span> Left Ear
+            </button>
+            <button type="button" class="ear-toggle-btn red" id="btn-ear-right" data-ear="right">
+              <span class="ear-symbol">◯</span> Right Ear
+            </button>
+          </div>
+        </div>
+
+        <div class="session-right">
+          <!-- ANC Active Status Indicator Pill -->
+          <div class="anc-header-status-pill green" id="anc-header-status-pill" title="Active Noise Cancellation Active">
+            <span class="anc-dot"></span>
+            <span id="anc-header-label">ANC: Enabled (-25 dB)</span>
+          </div>
+
+          <!-- Earphone Setup & Channel Check Button -->
+          <button type="button" class="btn-earphone-check" id="btn-open-headphone-modal" title="Configure and test earphones">
+            <span class="pulse-ring"></span>
+            <i data-lucide="headphones"></i> Earphone Setup & ANC
+          </button>
+
+          <!-- Mode Indicator Required by user -->
+          <div class="mode-badge" id="mode-indicator">
+            <span class="mode-icon"><i data-lucide="headphones"></i></span>
+            <span class="mode-text">Air Conduction — Headphones</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Earphone Configuration & Stereo Calibration Modal -->
+      <div id="modal-headphone-check" class="modal-backdrop" style="display: none;">
+        <div class="modal-content modal-headphone-content">
+          <div class="modal-header">
+            <div class="modal-title-group">
+              <span class="medical-badge">Transducer & ANC Setup</span>
+              <h3><i data-lucide="headphones"></i> Earphone Plugin & Active Noise Cancellation (ANC)</h3>
+            </div>
+            <button type="button" class="btn-close-modal" id="btn-close-headphone-modal">&times;</button>
+          </div>
+
+          <p class="modal-desc">
+            Connect your earphones. Active Background Noise Cancellation will suppress ambient noise for maximum clinical accuracy.
+          </p>
+
+          <!-- Active Background Noise Cancellation (ANC) Controls -->
+          <div class="anc-control-box">
+            <div class="anc-header-row">
+              <div class="anc-title-group">
+                <span class="anc-big-icon"><i data-lucide="headphones"></i></span>
+                <div>
+                  <strong>Active Noise Cancellation (ANC) & Ambient Suppression</strong>
+                  <span class="anc-sub">Automatically cancels room background noise when earphones are plugged in</span>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="anc-toggle-checkbox" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="anc-status-detail">
+              <div class="anc-status-pill green" id="anc-status-pill">
+                <span class="pulse-dot"></span>
+                <span id="anc-status-label">Earphones Connected — Active Noise Cancellation ON (-25 dBA Ambient Suppressed)</span>
+              </div>
+              <div class="ambient-meter-wrapper">
+                <span class="meter-lbl">Mic Ambient Noise Level:</span>
+                <div class="meter-bar-container">
+                  <div class="meter-bar-fill" id="ambient-noise-bar" style="width: 20%;"></div>
+                </div>
+                <span class="meter-val" id="ambient-noise-db">20 dBA (Quiet Room)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Output Device Selector -->
+          <div class="form-group">
+            <label for="audio-device-select">Selected Audio Output Device (Earphones / Headset):</label>
+            <div class="select-wrapper">
+              <select id="audio-device-select" class="clinical-select">
+                <option value="default">Default System Audio Output (Earphones Connected)</option>
+              </select>
+              <button type="button" class="btn-refresh-devices" id="btn-refresh-devices" title="Refresh connected audio devices"><i data-lucide="refresh-cw"></i></button>
+            </div>
+            <span class="device-status-note" id="device-status-note">Plug your 3.5mm jack or connect Bluetooth/USB earphones.</span>
+          </div>
+
+          <!-- Stereo Channel Isolation Check -->
+          <div class="channel-check-box">
+            <span class="check-title">Verify Stereo Channel Isolation</span>
+            <p class="check-desc">Click each button below to confirm sound plays <strong>only</strong> in the corresponding earphone.</p>
+
+            <div class="channel-test-buttons">
+              <button type="button" class="btn-channel-test blue" id="btn-test-left-channel">
+                <span class="channel-icon">◀ ✕</span>
+                <div class="channel-info">
+                  <strong>Test Left Earphone Only</strong>
+                  <span>Plays 1000 Hz tone at 100% Left pan</span>
+                </div>
+              </button>
+
+              <button type="button" class="btn-channel-test red" id="btn-test-right-channel">
+                <span class="channel-icon">◯ ▶</span>
+                <div class="channel-info">
+                  <strong>Test Right Earphone Only</strong>
+                  <span>Plays 1000 Hz tone at 100% Right pan</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Visual Channel Feedback Wave -->
+            <div class="stereo-feedback-bar" id="stereo-feedback-bar">
+              <div class="channel-indicator left" id="indicator-left">
+                <span>LEFT (✕)</span>
+                <div class="signal-dot"></div>
+              </div>
+              <div class="divider"></div>
+              <div class="channel-indicator right" id="indicator-right">
+                <div class="signal-dot"></div>
+                <span>RIGHT (◯)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Color Coding Advisory -->
+          <div class="earphone-advisory">
+            <div class="advisory-badge blue">BLUE = Left Ear</div>
+            <div class="advisory-badge red">RED = Right Ear</div>
+            <span class="advisory-text">Standard audiometric color coding for headphone placement.</span>
+          </div>
+
+          <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" class="btn-secondary" id="btn-cancel-headphone-modal">
+              ← Go Back
+            </button>
+            <button type="button" class="btn-primary" id="btn-confirm-headphones">
+              <i data-lucide="check-circle-2"></i> Earphones & ANC Verified — Proceed to Step 3 <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Two-Column Dashboard Grid -->
+      <div class="test-grid">
+
+        <!-- COLUMN 1: INTERACTIVE TEST CONTROLS -->
+        <div class="control-panel card">
+
+          <!-- 1. Frequency Selector Section -->
+          <div class="panel-section">
+            <div class="section-title-row">
+              <h2 class="section-title">
+                <span class="step-num">1</span> Frequency Selector (250 Hz – 20,000 Hz)
+              </h2>
+              <span class="active-badge" id="current-freq-display">1000 Hz Active</span>
+            </div>
+            <p class="section-hint">Select standard speech octaves or extended high frequencies (9–20 kHz) to test auditory limits.</p>
+
+            <!-- Extended Frequency Band Filter Chips -->
+            <div class="freq-filter-chips">
+              <span class="chip-label">Test Spectrum:</span>
+              <button type="button" class="freq-chip active" data-band="age_protocol" id="chip-age-protocol"><i data-lucide="target"></i> Age Protocol (Recommended)</button>
+              <button type="button" class="freq-chip" data-band="speech"><i data-lucide="message-square"></i> Speech (500Hz–4kHz)</button>
+              <button type="button" class="freq-chip" data-band="high"><i data-lucide="volume-2"></i> High (6kHz–8kHz)</button>
+              <button type="button" class="freq-chip" data-band="extended"><i data-lucide="zap"></i> Extended (9kHz–20kHz)</button>
+              <button type="button" class="freq-chip" data-band="all"><i data-lucide="globe"></i> All (250Hz–20kHz)</button>
+            </div>
+
+            <!-- Age Hearing Capacity Baseline Banner -->
+            <div class="age-capacity-banner" id="age-capacity-banner">
+              <span class="capacity-icon"><i data-lucide="target"></i></span>
+              <span id="age-capacity-text">Expected Max Audibility for Age 28: <strong>~18,000 Hz (18 kHz)</strong></span>
+            </div>
+
+            <div class="frequency-buttons-grid" id="frequency-selector">
+              <button type="button" class="freq-btn" data-freq="250">
+                <span class="freq-hz">250 Hz</span>
+                <span class="freq-status" id="status-250">--</span>
+              </button>
+              <button type="button" class="freq-btn" data-freq="500">
+                <span class="freq-hz">500 Hz</span>
+                <span class="freq-status" id="status-500">--</span>
+              </button>
+              <button type="button" class="freq-btn" data-freq="750">
+                <span class="freq-hz">750 Hz</span>
+                <span class="freq-status" id="status-750">--</span>
+              </button>
+              <button type="button" class="freq-btn active" data-freq="1000">
+                <span class="freq-hz">1000 Hz</span>
+                <span class="freq-status" id="status-1000">--</span>
+              </button>
+              <button type="button" class="freq-btn" data-freq="2000">
+                <span class="freq-hz">2000 Hz</span>
+                <span class="freq-status" id="status-2000">--</span>
+              </button>
+              <button type="button" class="freq-btn" data-freq="4000">
+                <span class="freq-hz">4000 Hz</span>
+                <span class="freq-status" id="status-4000">--</span>
+              </button>
+              <button type="button" class="freq-btn" data-freq="6000">
+                <span class="freq-hz">6000 Hz</span>
+                <span class="freq-status" id="status-6000">--</span>
+              </button>
+              <button type="button" class="freq-btn" data-freq="8000">
+                <span class="freq-hz">8000 Hz</span>
+                <span class="freq-status" id="status-8000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="9000">
+                <span class="freq-hz">9000 Hz</span>
+                <span class="freq-status" id="status-9000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="10000">
+                <span class="freq-hz">10 kHz</span>
+                <span class="freq-status" id="status-10000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="12000">
+                <span class="freq-hz">12 kHz</span>
+                <span class="freq-status" id="status-12000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="14000">
+                <span class="freq-hz">14 kHz</span>
+                <span class="freq-status" id="status-14000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="16000">
+                <span class="freq-hz">16 kHz</span>
+                <span class="freq-status" id="status-16000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="18000">
+                <span class="freq-hz">18 kHz</span>
+                <span class="freq-status" id="status-18000">--</span>
+              </button>
+              <button type="button" class="freq-btn ext-freq" data-freq="20000">
+                <span class="freq-hz">20 kHz</span>
+                <span class="freq-status" id="status-20000">--</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Volume / Decibel Control & Audio Tone -->
+          <div class="panel-section">
+            <div class="section-title-row">
+              <h2 class="section-title">
+                <span class="step-num">2</span> Intensity / Decibel Level
+              </h2>
+              <span class="db-severity-tag" id="db-severity-tag">Normal Range</span>
+            </div>
+
+            <!-- Large dB Meter Display & Stepper -->
+            <div class="db-meter-container">
+              <button type="button" class="stepper-btn" id="btn-db-minus-10" title="Decrease 10 dB">-10 dB</button>
+              <button type="button" class="stepper-btn" id="btn-db-minus-5" title="Decrease 5 dB">-5 dB</button>
+              
+              <div class="db-current-display">
+                <span class="db-number" id="current-db-val">20</span>
+                <span class="db-unit">dB HL</span>
+              </div>
+
+              <button type="button" class="stepper-btn" id="btn-db-plus-5" title="Increase 5 dB">+5 dB</button>
+              <button type="button" class="stepper-btn" id="btn-db-plus-10" title="Increase 10 dB">+10 dB</button>
+            </div>
+
+            <!-- Smooth Precision Volume Slider -->
+            <div class="db-slider-wrapper">
+              <div class="slider-labels">
+                <span>-10 dB</span>
+                <span>0 dB</span>
+                <span>30 dB</span>
+                <span>60 dB</span>
+                <span>90 dB</span>
+                <span>120 dB</span>
+              </div>
+              <input type="range" id="db-slider" min="-10" max="120" step="5" value="20" class="precision-slider">
+            </div>
+
+            <!-- Quick dB Preset Chips -->
+            <div class="db-presets-chips">
+              <span class="chip-label">Quick dB:</span>
+              <button type="button" class="chip-btn" data-db="10">10</button>
+              <button type="button" class="chip-btn active" data-db="20">20</button>
+              <button type="button" class="chip-btn" data-db="30">30</button>
+              <button type="button" class="chip-btn" data-db="40">40</button>
+              <button type="button" class="chip-btn" data-db="50">50</button>
+              <button type="button" class="chip-btn" data-db="60">60</button>
+              <button type="button" class="chip-btn" data-db="70">70</button>
+              <button type="button" class="chip-btn" data-db="80">80</button>
+            </div>
+
+            <!-- Real-time Sine Oscilloscope Visualizer Canvas -->
+            <div class="visualizer-container">
+              <canvas id="audio-visualizer-canvas" width="460" height="48"></canvas>
+            </div>
+
+            <!-- Audio Tone Delivery & Patient Interaction -->
+            <div class="test-interaction-box">
+              <button type="button" class="btn-play-tone" id="btn-play-tone">
+                <div class="play-tone-content">
+                  <div class="audio-waves" id="audio-wave-anim">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                  </div>
+                  <span class="play-label" id="play-tone-text"><i data-lucide="play"></i> Play Test Tone</span>
+                  <span class="play-subtext" id="play-tone-subtext">Click to present pure tone at 1000 Hz, 20 dB HL</span>
+                </div>
+              </button>
+
+              <div class="patient-response-actions">
+                <button type="button" class="btn-heard-it" id="btn-patient-heard">
+                  <span class="btn-icon"><i data-lucide="check-circle-2"></i></span>
+                  <div class="btn-text">
+                    <span class="main-txt">Patient Heard It</span>
+                    <span class="sub-txt" id="heard-btn-subtxt">Record Left Ear threshold (✕)</span>
+                  </div>
+                </button>
+                <button type="button" class="btn-not-heard" id="btn-patient-not-heard">
+                  <span class="btn-icon"><i data-lucide="x-circle"></i></span>
+                  <div class="btn-text">
+                    <span class="main-txt">Not Heard (+10 dB)</span>
+                    <span class="sub-txt">Increment intensity & retry</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Navigation Controls -->
+          <div class="panel-section bottom-actions">
+            <button type="button" class="btn-secondary" id="btn-next-freq">
+              Next Frequency <i data-lucide="arrow-right"></i>
+            </button>
+            <button type="button" class="btn-success" id="btn-finish-test">
+              Finish Test & View Report <i data-lucide="clipboard-check"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- COLUMN 2: LIVE DUAL-EAR AUDIOGRAM GRAPH -->
+        <div class="graph-panel card">
+          <div class="graph-header">
+            <div>
+              <h2 class="graph-title">Clinical Pure-Tone Audiogram</h2>
+              <p class="graph-subtitle">Air Conduction Thresholds (ANSI S3.21 & ISO 8253-1)</p>
+            </div>
+            <div class="graph-legend">
+              <div class="legend-item">
+                <span class="legend-mark-blue">✕</span>
+                <span class="legend-text">Left Ear</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-mark-red">◯</span>
+                <span class="legend-text">Right Ear</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SVG Audiogram Chart Container -->
+          <div class="audiogram-wrapper">
+            <svg id="audiogram-svg" viewBox="0 0 760 560" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <filter id="glow-x" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Injected dynamically via app.js -->
+              <g id="svg-background-zones"></g>
+              <g id="svg-grid-lines"></g>
+              <g id="svg-axes-labels"></g>
+              <path id="svg-threshold-line-left" class="audiogram-line line-left" d=""></path>
+              <path id="svg-threshold-line-right" class="audiogram-line line-right" d=""></path>
+              <g id="svg-threshold-markers-left"></g>
+              <g id="svg-threshold-markers-right"></g>
+              <g id="svg-active-cursor"></g>
+            </svg>
+          </div>
+
+          <!-- Clinical Hearing Loss Severity Reference Bar -->
+          <div class="severity-scale-bar">
+            <div class="scale-item norm" title="0 to 25 dB: Normal">Normal (0-25 dB)</div>
+            <div class="scale-item mild" title="26 to 40 dB: Mild">Mild (26-40)</div>
+            <div class="scale-item mod" title="41 to 55 dB: Moderate">Mod (41-55)</div>
+            <div class="scale-item mod-sev" title="56 to 70 dB: Mod-Severe">Mod-Sev (56-70)</div>
+            <div class="scale-item sev" title="71 to 90 dB: Severe">Severe (71-90)</div>
+            <div class="scale-item prof" title="91+ dB: Profound">Profound (>90)</div>
+          </div>
+
+          <!-- Calculated Average Graph Values Below Graph -->
+          <div id="graph-avg-summary-card" class="graph-avg-summary-card">
+            <div class="avg-summary-header">
+              <div class="avg-summary-title-group">
+                <span class="avg-summary-badge"><i data-lucide="bar-chart-2"></i> Graph Averages</span>
+                <h4 class="avg-summary-title">Average Hearing Threshold Values</h4>
+              </div>
+              <span class="avg-summary-hint">Calculated dynamically from graph data</span>
+            </div>
+
+            <div class="avg-summary-grid">
+              <!-- Left Ear Card -->
+              <div class="avg-card-item left-ear">
+                <div class="avg-card-top">
+                  <span class="ear-badge left">✕ Left Ear</span>
+                  <span id="graph-avg-degree-left" class="avg-badge normal">Pending</span>
+                </div>
+                <div class="avg-card-value">
+                  <span id="graph-avg-left-val" class="value-num">--</span>
+                  <span class="value-unit">dB HL</span>
+                </div>
+                <div class="avg-card-details">
+                  <span id="graph-avg-left-detail">PTA (500–4k): -- dB</span>
+                </div>
+              </div>
+
+              <!-- Right Ear Card -->
+              <div class="avg-card-item right-ear">
+                <div class="avg-card-top">
+                  <span class="ear-badge right">◯ Right Ear</span>
+                  <span id="graph-avg-degree-right" class="avg-badge normal">Pending</span>
+                </div>
+                <div class="avg-card-value">
+                  <span id="graph-avg-right-val" class="value-num">--</span>
+                  <span class="value-unit">dB HL</span>
+                </div>
+                <div class="avg-card-details">
+                  <span id="graph-avg-right-detail">PTA (500–4k): -- dB</span>
+                </div>
+              </div>
+
+              <!-- Overall Both Ears -->
+              <div class="avg-card-item combined-ear">
+                <div class="avg-card-top">
+                  <span class="ear-badge combined"><i data-lucide="layers"></i> Combined Both Ears</span>
+                  <span id="graph-avg-degree-overall" class="avg-badge normal">Pending</span>
+                </div>
+                <div class="avg-card-value">
+                  <span id="graph-avg-overall-val" class="value-num">--</span>
+                  <span class="value-unit">dB HL</span>
+                </div>
+                <div class="avg-card-details">
+                  <span id="graph-avg-speech-detail">High Freq (6k+): -- dB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================== -->
+      <!-- SUMMARY PANEL (Appears after finishing test)   -->
+      <!-- ============================================== -->
+      <div id="summary-section" class="summary-section card" style="display: none;">
+        <div class="summary-header">
+          <div class="summary-title-group">
+            <span class="medical-badge">Diagnostic Report</span>
+            <h2>Audiological Assessment Report</h2>
+            <p>Comprehensive pure-tone threshold evaluation for Left Ear (✕) and Right Ear (◯)</p>
+          </div>
+          <div class="summary-actions">
+            <button type="button" class="btn-primary" id="btn-save-backend">
+              <i data-lucide="save"></i> Save Record
+            </button>
+            <button type="button" class="btn-download-pdf" id="btn-download-pdf-direct">
+              <i data-lucide="download"></i> Download PDF
+            </button>
+            <button type="button" class="btn-whatsapp" id="btn-share-whatsapp-direct">
+              <i data-lucide="share-2"></i> Share via WhatsApp
+            </button>
+            <button type="button" class="btn-secondary" id="btn-print-report">
+              <i data-lucide="printer"></i> Print
+            </button>
+            <button type="button" class="btn-outline" id="btn-retest">
+              <i data-lucide="rotate-ccw"></i> Retest
+            </button>
+          </div>
+        </div>
+
+        <!-- Cloud Storage Sync Card (Shows uploaded graph URL & database status) -->
+        <div id="cloud-saved-card" class="cloud-saved-card" style="display: none;">
+          <div class="cloud-saved-info">
+            <h4 id="cloud-saved-title"><i data-lucide="cloud"></i> Audiogram Uploaded to Supabase Cloud</h4>
+            <p id="cloud-saved-desc">Data, dB thresholds, and graph image permanently saved to cloud storage.</p>
+          </div>
+          <div class="cloud-saved-links">
+            <a id="cloud-view-graph-link" href="#" target="_blank" class="btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.3rem; text-decoration: none; padding: 0.4rem 0.8rem; border-radius: var(--radius-sm);">
+              <i data-lucide="image"></i> <span>View Graph</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="summary-stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Left Ear PTA (500–4000 Hz)</span>
+            <span class="stat-value" id="summary-pta-left">-- dB</span>
+            <span class="stat-badge normal" id="summary-degree-left">Pending</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Right Ear PTA (500–4000 Hz)</span>
+            <span class="stat-value" id="summary-pta-right">-- dB</span>
+            <span class="stat-badge normal" id="summary-degree-right">Pending</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Overall Clinical Diagnosis</span>
+            <span class="stat-badge normal" id="summary-overall-degree">Normal Hearing</span>
+            <span class="stat-note">WHO Audiological Classification</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Transducer & Method</span>
+            <span class="stat-value small">Air Conduction</span>
+            <span class="stat-note">Calibrated Headphones</span>
+          </div>
+        </div>
+
+        <!-- Recorded Thresholds Table (Dual Ear Comparison) -->
+        <div class="summary-table-container">
+          <table class="clinical-table">
+            <thead>
+              <tr>
+                <th>Frequency (Hz)</th>
+                <th>Left Ear (✕)</th>
+                <th>Right Ear (◯)</th>
+                <th>Inter-Aural Diff</th>
+                <th>Classification</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body">
+              <!-- Rendered dynamically via app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Clinician / Doctor Observations Notes Box -->
+        <div class="clinician-notes-card">
+          <label for="clinician-notes" class="notes-label">
+            <i data-lucide="stethoscope"></i> Clinician Observations & Diagnostic Recommendations:
+          </label>
+          <textarea id="clinician-notes" rows="3" placeholder="Enter clinical notes, otoscopic findings, speech discrimination remarks, or follow-up recommendations..."></textarea>
+        </div>
+
+        <!-- Actionable Next Steps Guidance Card ("Where the next step goes") -->
+        <div class="next-steps-recommendation-card" id="next-steps-card">
+          <div class="rec-header">
+            <span class="rec-icon"><i data-lucide="sparkles"></i></span>
+            <div>
+              <h3 data-i18n="next_steps_title">Recommended Next Steps & Action Plan</h3>
+              <p data-i18n="next_steps_subtitle">Clear, easy-to-understand audiological next steps based on your hearing capacity</p>
+            </div>
+          </div>
+          <div class="rec-body" id="next-steps-dynamic-content">
+            <!-- Dynamically populated by app.js based on hearing test results & age -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>© 2026 AudioMetrics Clinical System • ISO 8253-1 Pure-Tone Audiometry Standard</p>
+      <p class="calibration-disclaimer">Calibrated for diagnostic headphones. Ambient background noise must remain ≤ 30 dBA.</p>
+    </div>
+  </footer>
+
+  <!-- Export Report Modal -->
+  <div id="modal-export-report" class="modal-backdrop" style="display: none;">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon"><i data-lucide="printer"></i></span>
+          <h3>Export Report</h3>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-export-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" style="margin-bottom: 20px;">Choose how you want to export or share your clinical hearing report:</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button type="button" class="btn-download-pdf" id="btn-export-pdf" style="text-align: center;"><i data-lucide="download"></i> Download as PDF Document</button>
+          <button type="button" class="btn-whatsapp" id="btn-modal-whatsapp" style="text-align: center;"><i data-lucide="share-2"></i> Share Report via WhatsApp</button>
+          <button type="button" class="btn-secondary" id="btn-export-print" style="text-align: center;"><i data-lucide="printer"></i> Print via System Dialog</button>
+        </div>
+      </div>
+      <div class="modal-actions" style="margin-top: 25px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn-secondary" id="btn-cancel-export">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
